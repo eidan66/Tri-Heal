@@ -25,6 +25,12 @@
       "skillPath": "skills/unity-workflows/SKILL.md",
       "computedHash": "1a811573fc705dce6e0ca1b9b1c653b246b7dea94a74b7bfc5c2d7a1092afd61"
     },
+    "caveman": {
+      "source": "juliusbrussee/caveman",
+      "sourceType": "github",
+      "skillPath": "skills/caveman/SKILL.md",
+      "computedHash": "1902fa0b569912d0c05736d8d98a72097d9b82719aac88c0c1d03bb546f9176d"
+    },
     "unity-ecs-patterns": {
       "source": "wshobson/agents",
       "sourceType": "github",
