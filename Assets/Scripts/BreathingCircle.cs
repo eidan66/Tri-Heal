@@ -17,6 +17,12 @@ public class BreathingCircle : MonoBehaviour, IPointerDownHandler, IPointerUpHan
 
     public Image holdGlowImage;
     public Text counterText;
+    public Image progressRingImage;
+    public Text phaseLabelText;
+
+    private const string InhaleLabel = "שאיפה";
+    private const string HoldLabel = "החזקה";
+    private const string ExhaleLabel = "נשיפה";
 
     private enum BreathState
     {
@@ -70,11 +76,16 @@ public class BreathingCircle : MonoBehaviour, IPointerDownHandler, IPointerUpHan
             case BreathState.Idle:
                 SetScale(minScale);
                 SetCounterText(null);
+                SetProgressRing(false, 0f);
+                SetPhaseLabel(null);
                 break;
 
             case BreathState.Growing:
-                AnimateScale(minScale, maxScale, phaseTimer / growDuration);
-                SetCounterNumber(Mathf.Clamp(Mathf.FloorToInt(phaseTimer / growDuration * 4f) + 1, 1, 4));
+                float growProgress = Mathf.Clamp01(phaseTimer / growDuration);
+                AnimateScale(minScale, maxScale, growProgress);
+                SetCounterNumber(Mathf.Clamp(Mathf.FloorToInt(growProgress * 4f) + 1, 1, 4));
+                SetProgressRing(true, growProgress);
+                SetPhaseLabel(InhaleLabel);
 
                 if (phaseTimer >= growDuration)
                     MoveToNextPhase(BreathState.HoldingAir);
@@ -83,6 +94,8 @@ public class BreathingCircle : MonoBehaviour, IPointerDownHandler, IPointerUpHan
             case BreathState.HoldingAir:
                 SetScale(maxScale);
                 SetCounterText(null);
+                SetProgressRing(true, 1f);
+                SetPhaseLabel(HoldLabel);
 
                 if (phaseTimer >= holdAirDuration)
                     MoveToNextPhase(BreathState.Releasing);
@@ -91,15 +104,18 @@ public class BreathingCircle : MonoBehaviour, IPointerDownHandler, IPointerUpHan
             case BreathState.Grace:
                 float graceScale = Mathf.MoveTowards(transform.localScale.x, minScale, graceShrinkSpeed * Time.deltaTime);
                 SetScale(graceScale);
-                // Counter intentionally left untouched - stays frozen at its last value.
+                // Counter, ring and label intentionally left untouched - stay frozen at their last value.
 
                 if (phaseTimer >= gracePeriodDuration)
                     MoveToNextPhase(BreathState.Idle);
                 break;
 
             case BreathState.Releasing:
-                AnimateScale(maxScale, minScale, phaseTimer / shrinkDuration);
-                SetCounterNumber(Mathf.Clamp(6 - Mathf.FloorToInt(phaseTimer / shrinkDuration * 6f), 1, 6));
+                float shrinkProgress = Mathf.Clamp01(phaseTimer / shrinkDuration);
+                AnimateScale(maxScale, minScale, shrinkProgress);
+                SetCounterNumber(Mathf.Clamp(6 - Mathf.FloorToInt(shrinkProgress * 6f), 1, 6));
+                SetProgressRing(true, 1f - shrinkProgress);
+                SetPhaseLabel(ExhaleLabel);
 
                 if (phaseTimer >= shrinkDuration)
                     MoveToNextPhase(BreathState.Idle);
@@ -142,6 +158,34 @@ public class BreathingCircle : MonoBehaviour, IPointerDownHandler, IPointerUpHan
             return;
 
         counterText.text = text ?? string.Empty;
+    }
+
+    private void SetPhaseLabel(string label)
+    {
+        if (phaseLabelText == null)
+            return;
+
+        // Legacy UI.Text always lays out glyphs left-to-right, even for Hebrew.
+        // Reversing the characters here is what actually makes it read correctly right-to-left.
+        phaseLabelText.text = label == null ? string.Empty : ReverseForRtlDisplay(label);
+    }
+
+    private static string ReverseForRtlDisplay(string text)
+    {
+        char[] characters = text.ToCharArray();
+        System.Array.Reverse(characters);
+        return new string(characters);
+    }
+
+    private void SetProgressRing(bool visible, float fillAmount)
+    {
+        if (progressRingImage == null)
+            return;
+
+        if (progressRingImage.gameObject.activeSelf != visible)
+            progressRingImage.gameObject.SetActive(visible);
+
+        progressRingImage.fillAmount = fillAmount;
     }
 
     private void UpdateGlow()
