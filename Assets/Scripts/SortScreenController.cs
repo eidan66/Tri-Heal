@@ -78,7 +78,7 @@ public class SortScreenController : MonoBehaviour
         bubble.transform.SetParent(target, worldPositionStays: false);
 
         int slotIndex = target.childCount - 1;
-        ((RectTransform)bubble.transform).anchoredPosition = new Vector2(slotIndex * 140f, 0f);
+        ((RectTransform)bubble.transform).anchoredPosition = new Vector2(0f, 50f - slotIndex * 100f);
     }
 
     private void Clear()

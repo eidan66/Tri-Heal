@@ -15,12 +15,12 @@ public class EDIEventController : MonoBehaviour
     public string originalText = "שני ילדים לחשו אחד לשני בהפסקה";
     public string[] factOptions = new string[]
     {
-        "הם דיברו עליי",
-        "כולם שונאים אותי",
+        "אני לא יודע על מה הם דברו",
+        "שני ילדים לחשו אחד לשני",
     };
     public string[] thoughtOptions = new string[]
     {
-        "שני ילדים לחשו אחד לשני",
+        "כולם שונאים אותי",
         "הם לא רוצים אותי",
     };
 
@@ -30,16 +30,16 @@ public class EDIEventController : MonoBehaviour
     public float separationDistance = 1.2f;
     public float separationDuration = 1f;
 
-    [Header("Glow / VFX")]
-    public ParticleSystem glowVfxPrefab;
-    public float glowSpawnProgress = 0.3f;
-
     [Header("Bubbles")]
     public EDIBubble bubblePrefab;
+    public EDIBubble titleBubblePrefab;
     public Transform crackAnchor;
     public float topBubbleHeight = 1.0f;
     public float bottomBubbleSpacing = 0.6f;
     public Vector3 bubbleFinalScale = Vector3.one;
+
+    [Header("Engraved Rock Text")]
+    public GameObject engravedRockText;
 
     [Header("Step 3")]
     public SortScreenController sortScreen;
@@ -71,11 +71,13 @@ public class EDIEventController : MonoBehaviour
 
     private IEnumerator SeparateHalves()
     {
+        if (engravedRockText != null)
+            engravedRockText.SetActive(false);
+
         Vector3 leftStart = halfRockLeft.localPosition;
         Vector3 rightStart = halfRockRight.localPosition;
 
         Vector3 apart = (rightStart - leftStart).normalized * (separationDistance * 0.5f);
-        bool glowSpawned = false;
 
         float t = 0f;
         while (t < 1f)
@@ -86,21 +88,8 @@ public class EDIEventController : MonoBehaviour
             halfRockLeft.localPosition = leftStart - apart * eased;
             halfRockRight.localPosition = rightStart + apart * eased;
 
-            if (!glowSpawned && t >= glowSpawnProgress)
-            {
-                glowSpawned = true;
-                SpawnGlow();
-            }
-
             yield return null;
         }
-    }
-
-    private void SpawnGlow()
-    {
-        if (glowVfxPrefab == null) return;
-        Vector3 pos = crackAnchor != null ? crackAnchor.position : transform.position;
-        Instantiate(glowVfxPrefab, pos, Quaternion.identity);
     }
 
     private void SpawnBubbles()
@@ -109,8 +98,8 @@ public class EDIEventController : MonoBehaviour
 
         List<(string text, EDISortableBubble.Category category)> shuffled = BuildShuffledOptions();
 
-        // Top bubble: original text
-        EDIBubble top = Instantiate(bubblePrefab, crackAnchor.parent);
+        // Top bubble: original text, styled as a title using the wood-panel UI
+        EDIBubble top = Instantiate(titleBubblePrefab != null ? titleBubblePrefab : bubblePrefab, crackAnchor.parent);
         top.transform.position = crackAnchor.position;
         Vector3 topTarget = crackAnchor.localPosition + Vector3.up * topBubbleHeight;
         top.Setup(originalText, crackAnchor.localPosition, topTarget, bubbleFinalScale);
