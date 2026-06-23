@@ -16,4 +16,10 @@ public class HomeScreenController : MonoBehaviour
     {
         SceneManager.LoadScene("rocksFlow");
     }
+
+    public void BackToHome()
+    {
+        breathingScreen.SetActive(false);
+        homeScreen.SetActive(true);
+    }
 }
